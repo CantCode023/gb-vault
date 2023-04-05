@@ -11,6 +11,7 @@ test_user = User(test_username, test_password)
 # Mock MongoDB collection
 mock_collection = MagicMock()
 
+
 # Test hash_password function
 def test_hash_password():
     hashed_password = hash_password(test_password)

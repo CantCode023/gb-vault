@@ -12,6 +12,7 @@ test_user = User(test_username, test_password)
 # Mock MongoDB collection
 mock_collection = MagicMock()
 
+
 # Test get_user_from_username function
 def test_get_user_from_username():
     mock_collection.find_one.return_value = {

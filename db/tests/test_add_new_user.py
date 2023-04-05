@@ -11,6 +11,7 @@ test_user = User(test_username, test_password)
 # Mock MongoDB collection
 mock_collection = MagicMock()
 
+
 # Test add_new_user function
 def test_add_new_user():
     mock_collection.insert_one.return_value = {
