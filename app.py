@@ -1,88 +1,41 @@
-from db import *
-import json
-
-# from gui import load_register
-
-# (
-#     username_entry,
-#     password_entry,
-#     remember_me_toggle,
-#     register_button,
-#     login_button,
-#     window,
-# ) = load_register()
-
-
-# def register_user():
-#     username = username_entry.get()
-#     password = password_entry.get()
-#     remember_me = remember_me_toggle.custom_value
-
-#     # Read data.json
-#     with open("data.json", "r") as f:
-#         data = json.load(f)
-
-#     # Print out the user created
-#     print(add_new_user(User(username=username, password=password)))
-
-#     # Save data to data.json
-#     data["remember_me"] = remember_me
-#     data["user"] = {"username": username, "password": str(hash_password(password))}
-
-#     with open("data.json", "w") as f:
-#         json.dump(data, f, indent=4)
-
-
-# register_button.configure(command=register_user)
-
-# window.mainloop()
-
 from tkinter import Tk
-from gui import load_register, load_login
+from gui import load_register as start_app, load_home
+import json
+from db import *
+from db.exceptions import *
 
 window = Tk()
 window.geometry("864x558")
 window.configure(bg="#FFFFFF")
+window.title("GBVault")
+window.iconbitmap("./assets/icon.ico")
 
-def clear_window():
-    for widget in window.winfo_children():
-        widget.destroy()
+with open("data.json", "r") as f:
+    data = json.load(f)
 
-# Register
-username_entry, password_entry, remember_me_toggle, register_button, login_text_button = load_register(window)
+if data["remember_me"]:
+    try:
+        user = get_user_from_username(data["user"]["username"])
 
-def register_user():
-    username = username_entry.get()
-    password = password_entry.get()
-    remember_me = remember_me_toggle.custom_value
+        # If password entered is correct
+        if str(data["user"]["password"]) == str(user.password):
+            print("Account remembered!")
+            load_home(window, user)
+        else:
+            start_app(window)
+    except UserNotFound:
+        print("User not found!")
+        start_app(window)
+else:
+    start_app(window)
 
-    # Read data.json
-    with open("data.json", "r") as f:
-        data = json.load(f)
-
-    # Print out the user created
-    print(add_new_user(User(username=username, password=password)))
-
-    # Save data to data.json
-    data["remember_me"] = remember_me
-    data["user"] = {"username": username, "password": str(hash_password(password))}
-
-    with open("data.json", "w") as f:
-        json.dump(data, f, indent=4)
-
-def go_to_login():
-    global username_entry, password_entry, remember_me_toggle, register_button, login_text_button
-    clear_window()
-    username_entry, password_entry, remember_me_toggle, register_button, login_text_button = load_login(window)
-
-register_button.configure(command=register_user)
-login_text_button.configure(command=go_to_login)
-
-# Login
-login_button = register_button
-register_text_button = login_text_button
-
-
+# return (
+#     entry_2, # Username entry
+#     entry_1, # Password entry
+#     button_1, # Remember me toggle
+#     button_2, # Register button
+#     button_3 # Login text button
+# )
 
 window.resizable(False, False)
 window.mainloop()
