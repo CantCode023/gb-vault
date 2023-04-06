@@ -2,12 +2,14 @@ import pymongo
 from dataclasses import dataclass
 import bcrypt
 from .exceptions import *
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
-gbvault_database = mongo_client["gbvault"]
-users_document = gbvault_database[
-    "users"
-]  # User consists of username and password (passwords will be hashed with bcrypt)
+atlas_password = os.environ["ATLAS_KEY"]
+mongo_client = pymongo.MongoClient(f"mongodb+srv://gbvault:{atlas_password}@users.tg7lkmh.mongodb.net/?retryWrites=true&w=majority")
+gbvault_database = mongo_client["GBVault"]
+users_document = gbvault_database["users"]  # User consists of username and password (passwords will be hashed with bcrypt)
 bcrypt_salt = bcrypt.gensalt()
 
 #############################################
