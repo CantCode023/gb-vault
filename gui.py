@@ -1,6 +1,10 @@
 from __future__ import annotations
 from pathlib import Path
 from tkinter import Canvas, Entry, Button, PhotoImage
+from db import *
+from db.exceptions import *
+import json
+import webbrowser
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(
@@ -80,6 +84,27 @@ def load_register(window):
         font=("Poppins Medium", 12 * -1),
     )
 
+    def register_user():
+        username = entry_2.get()
+        password = entry_1.get()
+        remember_me = button_1.custom_value
+
+        # Read data.json
+        with open("data.json", "r") as f:
+            data = json.load(f)
+
+        # Print out the user created
+        print(add_new_user(User(username=username, password=password)))
+
+        if remember_me:
+            # Save data to data.json
+            data["remember_me"] = remember_me
+            data["user"] = {"username": username, "password": str(hash_password(password))}
+
+            with open("data.json", "w") as f:
+                json.dump(data, f, indent=4)
+
+        go_to_login()
 
     window.button_image_2 = button_image_2 = PhotoImage(file=relative_to_assets("button_2.png"))
     button_2 = Button(
@@ -87,6 +112,7 @@ def load_register(window):
         borderwidth=0,
         highlightthickness=0,
         relief="sunken",
+        command=register_user
     )
     button_2.place(x=554.0, y=387.5, width=220.0, height=45.5)
 
@@ -99,12 +125,18 @@ def load_register(window):
         font=("Poppins Medium", 15 * -1),
     )
 
+    def go_to_login():
+        for widget in window.winfo_children():
+            widget.destroy()
+        load_login(window)
+
     window.button_image_3 = button_image_3 = PhotoImage(file=relative_to_assets("button_3.png"))
     button_3 = Button(
         image=button_image_3,
         borderwidth=0,
         highlightthickness=0,
-        relief="sunken"
+        relief="sunken",
+        command=go_to_login
     )
     button_3.place(x=739.0, y=452.0, width=44.0, height=22.0)
 
@@ -207,6 +239,38 @@ def load_login(window):
         font=("Poppins Medium", 12 * -1),
     )
 
+    def login_user():
+        # Check if user exists
+        username_entry = entry_2
+        password_entry = entry_1
+        remember_me = button_1.custom_value
+        try:
+            user = get_user_from_username(username_entry.get())
+
+            # If password entered is correct
+            if check_password(password_entry.get(), user.password):
+                print("Logged in!")
+            else:
+                print("Wrong password!")
+
+            if remember_me:
+                with open("data.json", "r") as f:
+                    data = json.load(f)
+
+                # Save data to data.json
+                data["remember_me"] = remember_me
+                data["user"] = {"username": user.username, "password": str(user.password)}
+
+                with open("data.json", "w") as f:
+                    json.dump(data, f, indent=4)
+
+            for widget in window.winfo_children():
+                widget.destroy()
+
+            load_home(window, user)
+        except UserNotFound:
+            print("User not found!")
+
 
     window.button_image_2 = button_image_2 = PhotoImage(file=relative_to_assets("login_button.png"))
     button_2 = Button(
@@ -214,6 +278,7 @@ def load_login(window):
         borderwidth=0,
         highlightthickness=0,
         relief="sunken",
+        command=login_user
     )
     button_2.place(x=554.0, y=387.5, width=220.0, height=45.5)
 
@@ -226,14 +291,19 @@ def load_login(window):
         font=("Poppins Medium", 15 * -1),
     )
 
+    def go_to_register():
+        for widget in window.winfo_children():
+            widget.destroy()
+        load_register(window)
+
     window.register_text = register_text = PhotoImage(file=relative_to_assets("register_button_text.png"))
     button_3 = Button(
         image=register_text,
         borderwidth=0,
         highlightthickness=0,
         bg="#fff",
-        command=lambda: print("button_3 clicked"),
-        relief="flat",
+        relief="sunken",
+        command=go_to_register,
     )
     button_3.place(x=739.0, y=452.0, width=71.0, height=22.0)
 
@@ -258,3 +328,79 @@ def load_login(window):
         button_2, # Register button
         button_3 # Login text button
     )
+
+def load_home(window, current_user):
+    canvas = Canvas(
+        window,
+        bg = "#FFFFFF",
+        height = 558,
+        width = 864,
+        bd = 0,
+        highlightthickness = 0,
+        relief = "ridge"
+    )
+
+    canvas.place(x = 0, y = 0)
+    text_item = canvas.create_text(
+        223.0,
+        52.0,
+        anchor="nw",
+        text=f"Welcome, {current_user.username}",
+        fill="#71008F",
+        font=("Poppins Medium", 40 * -1)
+    )
+
+    text_len = len(current_user.username)
+    if text_len > 10:
+        font_size = int((15 / text_len) * 40)
+        font_size = max(font_size, 25)  # set a minimum font size
+        canvas.itemconfig(text_item, font=("Poppins Medium", font_size * -1))
+
+    text_width = canvas.bbox(text_item)[2] - canvas.bbox(text_item)[0]
+    x = (864 - text_width) / 2
+    canvas.coords(text_item, x, 52.0)
+
+    window.image_image_1 = image_image_1 = PhotoImage(
+        file=relative_to_assets("subheader.png"))
+    canvas.create_image(
+        432.0,
+        170.0,
+        image=image_image_1
+    )
+
+    window.button_image_1 = button_image_1 = PhotoImage(
+        file=relative_to_assets("server_link.png"))
+    button_1 = canvas.create_image(
+        432.0,
+        170.0,
+        image=button_image_1
+    )
+    canvas.tag_bind(button_1, "<Button-1>", lambda event: webbrowser.open_new_tab("https://discord.gg/JeegWD4VPc"))
+
+    window.image_image_2 = PhotoImage(
+        file=relative_to_assets("footer.png"))
+    canvas.create_image(
+        432.0,
+        528.0,
+        image=window.image_image_2
+    )
+
+    window.button_image_2 = button_image_2 = PhotoImage(
+        file=relative_to_assets("github_link.png"))
+    button_2 = canvas.create_image(
+        432.0,
+        528.0,
+        image=button_image_2
+    )
+    canvas.tag_raise(button_2)
+    canvas.tag_bind(button_2, "<Button-1>", lambda event: webbrowser.open_new_tab("https://github.com/CantCode023"))
+
+    window.image_image_3 = image_image_3 = PhotoImage(
+        file=relative_to_assets("topbar.png"))
+    canvas.create_image(
+        432.0,
+        6.0,
+        image=image_image_3
+    )
+
+    canvas.bindtags((canvas, window, "all"))
