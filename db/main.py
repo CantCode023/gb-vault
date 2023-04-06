@@ -77,8 +77,10 @@ def add_new_user(user_to_add: User) -> User:
     Returns:
         User: Returns class User.
     """
-    user_already_exist = get_user_from_username(user_to_add.username)
-    if not user_already_exist:
+    try:
+        get_user_from_username(user_to_add.username)
+        raise UserAlreadyExist("Username taken!")
+    except UserNotFound:
         users_document.insert_one(
             {
                 "username": user_to_add.username,
@@ -86,4 +88,3 @@ def add_new_user(user_to_add: User) -> User:
             }
         )
         return User(user_to_add.username, hash_password(user_to_add.password))
-    raise UserAlreadyExist("Username taken!")
