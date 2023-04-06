@@ -31,7 +31,7 @@ def hash_password(password_to_hash: str) -> str:
     return bcrypt.hashpw(password_to_hash.encode("utf-8"), bcrypt_salt)
 
 
-def check_password(password_to_check: str, hashed_password: str) -> bool:
+def check_password(password_to_check: str, hashed_password: bytes) -> bool:
     """Checks if password entered is the same as the password stored in database.
 
     Args:
