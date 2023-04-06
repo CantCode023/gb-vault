@@ -250,24 +250,24 @@ def load_login(window):
             # If password entered is correct
             if check_password(password_entry.get(), user.password):
                 print("Logged in!")
+
+                for widget in window.winfo_children():
+                    widget.destroy()
+
+                load_home(window, user)
+
+                if remember_me:
+                    with open("data.json", "r") as f:
+                        data = json.load(f)
+
+                    # Save data to data.json
+                    data["remember_me"] = remember_me
+                    data["user"] = {"username": user.username, "password": str(user.password)}
+
+                    with open("data.json", "w") as f:
+                        json.dump(data, f, indent=4)
             else:
                 print("Wrong password!")
-
-            if remember_me:
-                with open("data.json", "r") as f:
-                    data = json.load(f)
-
-                # Save data to data.json
-                data["remember_me"] = remember_me
-                data["user"] = {"username": user.username, "password": str(user.password)}
-
-                with open("data.json", "w") as f:
-                    json.dump(data, f, indent=4)
-
-            for widget in window.winfo_children():
-                widget.destroy()
-
-            load_home(window, user)
         except UserNotFound:
             print("User not found!")
 

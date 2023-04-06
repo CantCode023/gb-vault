@@ -13,7 +13,7 @@ window.iconbitmap("./assets/icon.ico")
 with open("data.json", "r") as f:
     data = json.load(f)
 
-if data["remember_me"]:
+if "remember_me" in data and data["remember_me"]:
     try:
         user = get_user_from_username(data["user"]["username"])
 
